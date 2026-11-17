@@ -8,8 +8,6 @@ Es un único archivo `index.html`, sin dependencias externas. Todo el cálculo s
 
 En alto alemán medio, *mâze* (también *mâȥe*) significa «medida, proporción», y *diu mâze* es la mesura, la virtud cortesana del equilibrio y la justa medida. Su equivalente castellano es la *mesura*, la virtud que el *Cantar de mio Cid* elogia en su héroe. La aplicación mide textos y busca en ellos proporciones; esta edición la adapta al español medieval.
 
-Escríbase siempre con circunflejo, *Mâze*: sin él, en inglés se lee *maze*, «laberinto».
-
 ## Uso
 
 - **En línea**: `https://javiermunoz-acebes.github.io/maze_esp_med/`.
@@ -105,14 +103,6 @@ La pestaña **Anotación** muestra el texto verso a verso con el lema y la categ
 **Normalización ortográfica**: reglas `origen => destino` (también con expresiones regulares). Las reglas y opciones se pueden guardar como perfiles reutilizables, que también se exportan e importan en JSON.
 
 **Exportación**: cada tabla en CSV o Excel (.xlsx); cada gráfico en SVG o PNG; todas las métricas en JSON o Excel; y un informe HTML con parámetros, tablas y gráficos, que también puede imprimirse como PDF.
-
-## Cómo citar
-
-El archivo `CITATION.cff` permite que GitHub muestre el botón *Cite this repository*. Para obtener un DOI permanente:
-
-1. Conecta la cuenta de GitHub en <https://zenodo.org> y activa el repositorio en *GitHub → Repositories*.
-2. Crea una *release* en GitHub (p. ej. `v2.0.0`): Zenodo la archiva y le asigna un DOI.
-3. Añade el DOI a `CITATION.cff` (campo `doi:`) y a este README.
 
 ## Licencia
 
