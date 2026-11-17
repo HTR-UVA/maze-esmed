@@ -1,0 +1,26 @@
+cff-version: 1.2.0
+message: "Si usas Mâze esp. med. en una publicación, cítala así."
+title: "Mâze esp. med.: lectura distante y análisis cuantitativo de textos en español medieval"
+abstract: "Aplicación web estática para el análisis cuantitativo de textos en español medieval, en verso o en prosa: frecuencias, riqueza léxica, leyes de Zipf y Heaps, asonancia y tiradas, concordancias y colocaciones, keyness, estilometría (Delta, Rolling Delta) y análisis con léxicos propios, a partir de TXT, TEI-XML, CoNLL-U, salida de FreeLing o TSV/CSV. El nombre procede del mhd. mâze, «medida, mesura»."
+type: software
+version: 2.0.0
+date-released: 2026-11-15
+authors:
+  - family-names: "Muñoz-Acebes"
+    given-names: "Francisco Javier"
+    orcid: "https://orcid.org/0000-0001-6527-203X"
+    affiliation: "Universidad de Valladolid"
+keywords:
+  - Old Spanish
+  - español medieval
+  - assonance
+  - distant reading
+  - digital humanities
+  - computational philology
+  - stylometry
+  - lexical richness
+  - TEI
+repository-code: "https://github.com/javiermunoz-acebes/maze_esp_med"
+url: "https://javiermunoz-acebes.github.io/maze_esp_med/"
+# doi: "10.5281/zenodo.XXXXXXX"
+license: MIT
