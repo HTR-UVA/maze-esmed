@@ -10,7 +10,6 @@ En alto alemán medio, *mâze* (también *mâȥe*) significa «medida, proporci�
 
 ## Uso
 
-- **En línea**: `https://javiermunoz-acebes.github.io/maze_esp_med/`.
 - **En local**: descarga `index.html` y ábrelo con el navegador. No necesita instalación ni conexión.
 
 ### Publicar en GitHub Pages
