@@ -302,7 +302,10 @@ details.help ul{margin:0;padding-left:18px}details.help li{margin:2px 0}
   </details>
   <details>
     <summary>Palabras vacías adicionales</summary>
-    <div class="inner"><textarea id="extraStop" rows="3" placeholder="una por línea o separadas por comas"></textarea></div>
+    <div class="inner"><textarea id="extraStop" rows="4" placeholder="una por línea o separadas por comas"></textarea>
+      <div class="toolbar" style="margin-top:6px"><button class="mini" id="stopLoad">Cargar lista (.txt)…</button><input type="file" id="stopFile" accept=".txt,.csv,.tsv,text/plain" hidden>
+        <label class="chk"><input type="checkbox" id="stopOnly"> usar solo esta lista (sin la de la lengua)</label></div>
+      <span class="note">Una palabra por línea o separadas por comas o espacios; las líneas que empiezan por # se ignoran. Se añaden a la lista de palabras vacías de la lengua, salvo que marques «usar solo esta lista». Se aplican al pulsar «Analizar» y se guardan en los perfiles.</span></div>
   </details>
   <details>
     <summary>Categorías léxicas (texto anotado)</summary>
@@ -858,10 +861,10 @@ la: 'cf ibid id cap lib fol',
 none: ''
 };
 const stripMarks = w => w.normalize('NFD').replace(/[\u0300-\u036f]/g, '').normalize('NFC');
-function stopSet(lang, extra) {
-  const s = new Set((STOP[lang] || '').split(/\s+/).filter(Boolean));
+function stopSet(lang, extra, only) {
+  const s = new Set(only ? [] : (STOP[lang] || '').split(/\s+/).filter(Boolean));
+  (extra || '').split('\n').filter(l => !/^\s*#/.test(l)).join('\n').split(/[\s,;]+/).map(w => w.trim().toLocaleLowerCase()).filter(Boolean).forEach(w => s.add(w));
   if (lang === 'gmh') { [...s].forEach(w => s.add(stripMarks(w))); const h = s.has.bind(s); s.has = w => h(w) || h(stripMarks(w)); }
-  (extra || '').split(/[\n,;]+/).map(w => w.trim().toLocaleLowerCase()).filter(Boolean).forEach(w => s.add(w));
   return s;
 }
 
@@ -1012,7 +1015,7 @@ function analyzeDoc(doc, o) {
   const order = Array.from({length: V}, (_, i) => i).sort((a, b) => freq[b] - freq[a] || (words[a] < words[b] ? -1 : 1));
   const rank = new Int32Array(V); order.forEach((id, r) => rank[id] = r + 1);
   const spec = new Map(); for (let i = 0; i < V; i++) spec.set(freq[i], (spec.get(freq[i]) || 0) + 1);
-  const stops = stopSet(o.lang, o.extraStop); const isStop = new Uint8Array(V); words.forEach((w, i) => { if (stops.has(w)) isStop[i] = 1; });
+  const stops = stopSet(o.lang, o.extraStop, o.stopOnly); const isStop = new Uint8Array(V); words.forEach((w, i) => { if (stops.has(w)) isStop[i] = 1; });
   Object.assign(R, {freq, order, rank, spec, isStop});
   R.counts = basicCounts(R);
   R.heaps = heapsCurve(R);
@@ -2198,6 +2201,12 @@ const DICT = {
 "El subcorpus del ReM elegido está vacío: se usa el ReM completo.": "Das gewählte ReM-Teilkorpus ist leer: es wird das gesamte ReM verwendet.",
 "Lematizado con el ReM (consulta forma → lema, sin contexto; subcorpus: {2}): {0} % de los tokens con lema; {1} % de formas ambiguas, con el lema más frecuente. Revisa el resultado en la pestaña Anotación; para analizar por lemas, elige «lema» como unidad.": "Mit dem ReM lemmatisiert (Nachschlagen Form → Lemma, ohne Kontext; Teilkorpus: {2}): {0} % der Tokens mit Lemma; {1} % mehrdeutige Formen, mit dem häufigsten Lemma. Ergebnis im Reiter Annotation prüfen; für eine Analyse nach Lemmata «Lemma» als Einheit wählen.",
 "Consulta en una tabla de formas y lemas sacada del Referenzkorpus Mittelhochdeutsch (ReM 2.1, CC BY-SA 4.0): a cada forma se le asigna su lema y su categoría más frecuentes en el corpus (o en el subcorpus elegido; si la forma no aparece en él, se usa el ReM completo), sin tener en cuenta el contexto. En textos no vistos con formas normalizadas acierta el lema en torno al 95 % de los casos que encuentra. Los lemas del archivo (RNNTagger, TEI con @lemma, CoNLL-U) tienen prioridad.": "Nachschlagen in einer Form-Lemma-Tabelle aus dem Referenzkorpus Mittelhochdeutsch (ReM 2.1, CC BY-SA 4.0): Jeder Form werden ihr häufigstes Lemma und ihre häufigste Wortart im Korpus zugewiesen (oder im gewählten Teilkorpus; kommt die Form dort nicht vor, wird das gesamte ReM verwendet), ohne Kontext. Bei ungesehenen Texten mit normalisierten Formen ist das Lemma in rund 95 % der gefundenen Fälle richtig. Lemmata aus der Datei (RNNTagger, TEI mit @lemma, CoNLL-U) haben Vorrang.",
+"Todas las ediciones": "Alle Ausgaben",
+"Portada de Mâze con todas las ediciones": "Startseite von Mâze mit allen Ausgaben",
+"Cargar lista (.txt)…": "Liste laden (.txt) …",
+"usar solo esta lista (sin la de la lengua)": "nur diese Liste verwenden (ohne die der Sprache)",
+"Una palabra por línea o separadas por comas o espacios; las líneas que empiezan por # se ignoran. Se añaden a la lista de palabras vacías de la lengua, salvo que marques «usar solo esta lista». Se aplican al pulsar «Analizar» y se guardan en los perfiles.": "Ein Wort pro Zeile oder durch Kommas oder Leerzeichen getrennt; Zeilen, die mit # beginnen, werden ignoriert. Sie werden der Stoppwortliste der Sprache hinzugefügt, außer wenn «nur diese Liste verwenden» markiert ist. Sie gelten nach «Analysieren» und werden in Profilen gespeichert.",
+"{0} palabras vacías cargadas de «{1}». Pulsa «Analizar» para aplicarlas.": "{0} Stoppwörter aus «{1}» geladen. Zum Anwenden «Analysieren» drücken.",
 "Edición mhd.": "Ausgabe mhd.",
 "mhd.": "mhd.",
 "Edición general": "Allgemeine Ausgabe",
@@ -3016,6 +3025,12 @@ const DICT = {
 "El subcorpus del ReM elegido está vacío: se usa el ReM completo.": "The selected ReM subcorpus is empty: the full ReM is used.",
 "Lematizado con el ReM (consulta forma → lema, sin contexto; subcorpus: {2}): {0} % de los tokens con lema; {1} % de formas ambiguas, con el lema más frecuente. Revisa el resultado en la pestaña Anotación; para analizar por lemas, elige «lema» como unidad.": "Lemmatised with ReM (form → lemma lookup, no context; subcorpus: {2}): {0} % of tokens with a lemma; {1} % ambiguous forms, given their most frequent lemma. Check the result in the Annotation tab; to analyse by lemma, choose \"lemma\" as the unit.",
 "Consulta en una tabla de formas y lemas sacada del Referenzkorpus Mittelhochdeutsch (ReM 2.1, CC BY-SA 4.0): a cada forma se le asigna su lema y su categoría más frecuentes en el corpus (o en el subcorpus elegido; si la forma no aparece en él, se usa el ReM completo), sin tener en cuenta el contexto. En textos no vistos con formas normalizadas acierta el lema en torno al 95 % de los casos que encuentra. Los lemas del archivo (RNNTagger, TEI con @lemma, CoNLL-U) tienen prioridad.": "Lookup in a form–lemma table drawn from the Reference Corpus of Middle High German (ReM 2.1, CC BY-SA 4.0): each form gets its most frequent lemma and tag in the corpus (or in the chosen subcorpus; if the form does not occur there, the full ReM is used), without context. On unseen texts with normalised forms the lemma is right in about 95 % of the cases found. Lemmas from the file (RNNTagger, TEI with @lemma, CoNLL-U) take precedence.",
+"Todas las ediciones": "All editions",
+"Portada de Mâze con todas las ediciones": "Mâze home page with all editions",
+"Cargar lista (.txt)…": "Load list (.txt)…",
+"usar solo esta lista (sin la de la lengua)": "use only this list (without the language's)",
+"Una palabra por línea o separadas por comas o espacios; las líneas que empiezan por # se ignoran. Se añaden a la lista de palabras vacías de la lengua, salvo que marques «usar solo esta lista». Se aplican al pulsar «Analizar» y se guardan en los perfiles.": "One word per line or separated by commas or spaces; lines starting with # are ignored. They are added to the language's stopword list unless \"use only this list\" is ticked. They apply when you press \"Analyse\" and are saved in profiles.",
+"{0} palabras vacías cargadas de «{1}». Pulsa «Analizar» para aplicarlas.": "{0} stopwords loaded from \"{1}\". Press \"Analyse\" to apply them.",
 "Edición mhd.": "MHG edition",
 "mhd.": "MHG",
 "Edición general": "General edition",
@@ -3619,7 +3634,7 @@ function prepare(f, o) {
 function getOpts() {
   return {lower: $('#optLower').checked, nums: $('#optNums').checked, apos: $('#optApos').checked, hyph: $('#optHyph').checked, longS: $('#optLongS').checked, stripMarks: $('#optStripMarks').checked,
     unit: $('#unit').value, win: Math.max(10, +$('#pWin').value || 500), seg: Math.max(10, +$('#pSeg').value || 100), parts: clamp(+$('#pParts').value || 10, 2, 100),
-    lang: $('#lang').value, extraStop: $('#extraStop').value, rules: $('#rules').value, lexPos: $('#lexPos').value,
+    lang: $('#lang').value, extraStop: $('#extraStop').value, stopOnly: $('#stopOnly').checked, rules: $('#rules').value, lexPos: $('#lexPos').value,
     segMode: $('#segMode').value, segRegex: $('#segRegex').value, teiRoot: $('#teiRoot').value.trim(), teiExclude: $('#teiExclude').value, teiLayer: $('#teiLayer').value,
     tsvForm: +$('#tsvForm').value || 1, tsvLemma: +$('#tsvLemma').value || 0, tsvPos: +$('#tsvPos').value || 0, tsvHeader: $('#tsvHeader').checked, tsvAuto: $('#tsvAuto').checked, textType: $('#textType').value, teiSplit: $('#teiSplit').checked, lemmatize: $('#remLem').checked && !!$('#lex-rem').textContent.trim(), lemSimple: $('#remSimple').checked};
 }
@@ -3664,7 +3679,7 @@ const PRESETS = {
 $('#rulePreset').onchange = () => { const p = PRESETS[$('#rulePreset').value]; if (p) $('#rules').value = ($('#rules').value.trim() ? $('#rules').value.trim() + '\n' : '') + p; $('#rulePreset').value = ''; };
 $('#lexPreset').onchange = () => { if ($('#lexPreset').value !== 'custom') $('#lexPos').value = $('#lexPreset').value; };
 const PROF_KEY = 'dr-profiles';
-const PROF_FIELDS = ['lang', 'textType', 'teiSplit', 'remLem', 'remSimple', 'rules', 'extraStop', 'optLower', 'optNums', 'optApos', 'optHyph', 'optLongS', 'optStripMarks', 'unit', 'segMode', 'segRegex', 'teiRoot', 'teiExclude', 'teiLayer', 'lexPos', 'pWin', 'pSeg', 'pParts'];
+const PROF_FIELDS = ['lang', 'textType', 'teiSplit', 'remLem', 'remSimple', 'rules', 'extraStop', 'stopOnly', 'optLower', 'optNums', 'optApos', 'optHyph', 'optLongS', 'optStripMarks', 'unit', 'segMode', 'segRegex', 'teiRoot', 'teiExclude', 'teiLayer', 'lexPos', 'pWin', 'pSeg', 'pParts'];
 function loadProfiles() { try { return JSON.parse(localStorage.getItem(PROF_KEY) || '{}'); } catch (e) { return {}; } }
 function saveProfiles(p) { try { localStorage.setItem(PROF_KEY, JSON.stringify(p)); } catch (e) {} }
 function profileFromForm() { const o = {}; PROF_FIELDS.forEach(k => { const el = $('#' + k); o[k] = el.type === 'checkbox' ? el.checked : el.value; }); return o; }
@@ -3712,6 +3727,10 @@ function setProgress(f, msg) { const p = $('#prog'); if (f == null) { p.style.di
    ===================================================================== */
 let DOCS = [], A = null, AI = 0; let OPTS = null;
 let BOOT = {}, STAB = {}, STYLO = null, ROLL = null, KEY = null, NG = null, BIG = null, COLL = null, NET = null, KW = [];
+$('#stopLoad').onclick = () => $('#stopFile').click();
+$('#stopFile').onchange = async e => { const f = e.target.files[0]; if (!f) return; const txt = decodeBytes(new Uint8Array(await f.arrayBuffer())).replace(/\r\n?/g, '\n');
+  const cur = $('#extraStop').value.trim(); $('#extraStop').value = (cur ? cur + '\n' : '') + txt.trim(); e.target.value = '';
+  const n = txt.split('\n').filter(l => !/^\s*#/.test(l)).join('\n').split(/[\s,;]+/).filter(Boolean).length; setStatus(t('{0} palabras vacías cargadas de «{1}». Pulsa «Analizar» para aplicarlas.', nf(n), f.name)); };
 $('#runBtn').onclick = runAnalysis;
 async function runAnalysis() {
   if (!FILES.length) return; const o = getOpts(); OPTS = o; const docs = [], errs = []; const t0 = performance.now();
@@ -4118,7 +4137,7 @@ function runKeyness() {
   const ti = +$('#kTarget').value, rv = $('#kRef').value; const T = DOCS[ti]; const refs = rv === 'rest' ? DOCS.filter((d, i) => i !== ti) : [DOCS[+rv]];
   if (!refs.length || (rv !== 'rest' && +rv === ti)) { KEY = {err: t('Elige un texto de referencia distinto del objetivo.')}; renderKeyTables(); return; }
   const fT = freqMap(T), fR = new Map(); let NR = 0; refs.forEach(r => { NR += r.N; for (let i = 0; i < r.V; i++) fR.set(r.words[i], (fR.get(r.words[i]) || 0) + r.freq[i]); });
-  const NT = T.N, minF = Math.max(1, +$('#kMin').value || 5), thr = +$('#kP').value, noStop = $('#kStop').checked; const stops = stopSet(OPTS.lang, OPTS.extraStop);
+  const NT = T.N, minF = Math.max(1, +$('#kMin').value || 5), thr = +$('#kP').value, noStop = $('#kStop').checked; const stops = stopSet(OPTS.lang, OPTS.extraStop, OPTS.stopOnly);
   const words = new Set([...fT.keys(), ...fR.keys()]); const out = [];
   for (const w of words) { const a = fT.get(w) || 0, b = fR.get(w) || 0; if (a + b < minF || (noStop && stops.has(w))) continue;
     const E1 = NT * (a + b) / (NT + NR), E2 = NR * (a + b) / (NT + NR); const ll = 2 * ((a ? a * Math.log(a / E1) : 0) + (b ? b * Math.log(b / E2) : 0)); if (ll < thr) continue;
@@ -4773,7 +4792,8 @@ dlButtons($('#dlFL'), () => slug(A.name) + '_formas_ambiguas', () => ({header: [
     $$('code').forEach(c => { if (c.textContent === 'ritter*') c.textContent = 'cauall*'; else if (c.textContent === 'minn*') c.textContent = 'señ*'; });
     $('#segRegex').placeholder = 'p. ej. ^(Cantar|Capítulo|Tirada)\\b';
   }
-  if (STANDALONE) $('#edLink').hidden = true;
+  if (STANDALONE === 'hub') { const a = $('#edLink'); a.hidden = false; a.href = '../'; a.textContent = 'Todas las ediciones'; a.title = 'Portada de Mâze con todas las ediciones'; }
+  else if (STANDALONE) $('#edLink').hidden = true;
   fillKSort(); renderProfiles(''); initWorker(); setLang(l);
   if (EDITION === 'mhd') $('#lexNegWords').value = NEGATORS.gmh || '';
   if (EDITION === 'esmed') $('#lexNegWords').value = NEGATORS.osp || '';
